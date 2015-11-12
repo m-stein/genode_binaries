@@ -1,0 +1,50 @@
+
+            ===============================================
+            Images for the Genode TZ-VMM demo on USB Armory
+            ===============================================
+
+
+                             Martin Stein
+
+Brief
+#####
+
+Pre-built images for running the Genode Trustzone-VMM demo on the
+USB Armory Mk-I.
+
+Reproduce
+#########
+
+:User settings:
+
+  ! export TOOLCHAIN_DIR=~           ### where to extract the toolchain to
+  ! export TARGET_DIR=~              ### where to put the resulting images to
+  ! export USB_ARMORY_SDC=/dev/sdX   ### SD card delivered with the USB Armory Mk-I
+  ! export USB_ARMORY_SDC_MNT=/mnt   ### where to mount the SD card
+
+:Download toolchain:
+
+  ! export TOOLCHAIN=gcc-linaro-4.9-2015.02-3-x86_64_arm-linux-gnueabihf
+  ! export CROSS_COMPILE=${TOOLCHAIN_DIR}/${TOOLCHAIN}/bin/arm-linux-gnueabihf-
+  ! wget https://releases.linaro.org/15.02/components/toolchain/binaries/arm-linux-gnueabihf/${TOOLCHAIN}.tar.xz
+  ! tar xvf ${TOOLCHAIN}.tar.xz -C $TOOLCHAIN_DIR
+
+:Build 'linux' and 'dtb':
+
+  ! export ARCH=arm
+  ! export LOADADDR=0x80008000
+  ! git clone git@github.com:m-stein/linux.git
+  ! cd linux
+  ! git checkout genode_hw_usb_armory_tz_vmm
+  ! make usbarmory_defconfig
+  ! make uImage imx53-usbarmory.dtb
+  ! cp arch/arm/boot/compressed/vmlinux ${TARGET_DIR}/linux
+  ! cp arch/arm/boot/dts/imx53-usbarmory.dtb ${TARGET_DIR}/dtb
+
+:Build 'rootfs':
+
+  ! make modules
+  ! sudo mount ${USB_ARMORY_SDC}1 $USB_ARMORY_SDC_MNT
+  ! sudo -E make INSTALL_MOD_PATH=$USB_ARMORY_SDC_MNT modules_install
+  ! sudo umount $USB_ARMORY_SDC_MNT
+  ! sudo partclone.ext4 -c -d -s ${USB_ARMORY_SDC}1 -o $TARGET_DIR/rootfs
